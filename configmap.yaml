@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: exam-configmap
+  namespace: exam
+data:
+  PRESTASHOP_FIRST_NAME: "firstname"
+  PRESTASHOP_LAST_NAME: "lastname"

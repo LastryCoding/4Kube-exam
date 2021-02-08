@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prestashop-deployment
+  namespace: exam
+  labels:
+    app: prestashop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prestashop
+  template:
+    metadata:
+      labels:
+        app: prestashop
+    spec:
+      initContainers:
+      - name: init-prestashop
+        image: busybox:1.28
+        command:
+          - chmod
+          - '777'
+          - '/bitnami/prestashop'
+        volumeMounts:
+        - mountPath: "/bitnami/prestashop"
+          name: mypd
+      containers:
+      - name: prestashop
+        image: bitnami/prestashop:1.7
+        volumeMounts:
+        - mountPath: "/bitnami/prestashop"
+          name: mypd
+        ports:
+        - containerPort: 8080
+        env:
+          - name: PRESTASHOP_FIRST_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: exam-configmap
+                key: PRESTASHOP_FIRST_NAME
+          - name: PRESTASHOP_LAST_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: 'exam-configmap'
+                key: PRESTASHOP_LAST_NAME
+          - name: PRESTASHOP_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: exam-secret
+                key: PRESTASHOP_DATABASE_PASSWORD
+          - name: MARIADB_HOST
+            value: mariadb-service
+          - name: PRESTASHOP_DATABASE_NAME
+            valueFrom:
+              secretKeyRef:
+                name: exam-secret
+                key: PRESTASHOP_DATABASE_NAME
+          - name: PRESTASHOP_DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                name: exam-secret
+                key: PRESTASHOP_DATABASE_USER
+          - name: PRESTASHOP_DATABASE_PASSWORD
+            valueFrom:
+             secretKeyRef:
+                name: 'exam-secret'
+                key: PRESTASHOP_DATABASE_PASSWORD
+          - name: PRESTASHOP_HOST
+            value: "website.com"
+      volumes:
+      - name: mypd
+        persistentVolumeClaim:
+          claimName: prestashop-pvc
